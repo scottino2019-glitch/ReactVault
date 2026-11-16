@@ -46,7 +46,7 @@ export default function DioramaParallasse() {
         <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative w-full max-w-lg h-56 flex items-center justify-center">
           <motion.div style={{ x: bgX, y: bgY }} className="absolute w-72 h-48 border border-[#1E3A8A]/35 rounded-xl bg-[#FAF8F4]/70 -translate-x-10 -translate-y-4" />
           <motion.div style={{ x: imgX, y: imgY }} className="relative z-10 w-64 h-44 rounded-xl overflow-hidden border border-[#E2DCD2] shadow-lg translate-x-6">
-            <img src="https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/botanical.jpg" alt="Tavola botanica" className="w-full h-full object-cover" />
+            <img src="./images/botanical.jpg" alt="Tavola botanica" className="w-full h-full object-cover" />
           </motion.div>
           <motion.div style={{ x: fgX, y: fgY }} className="absolute left-4 sm:left-6 bottom-4 z-20 bg-white/95 backdrop-blur-xs border border-[#E2DCD2] rounded-lg px-5 py-3.5 shadow-md">
             <p className="text-[11px] uppercase tracking-[0.18em] text-[#1E3A8A]">Livello anteriore</p>
