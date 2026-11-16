@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Upload, FolderPlus, FileCode2, X, Check } from 'lucide-react';
 import type { VaultCategory } from '../types/vault';
 import type { AppTheme } from '../theme';
+import * as vaultClient from '../lib/vaultClient';
 
 interface PendingFile {
   fileName: string;
@@ -102,19 +103,10 @@ export function UploadView({ categories, onUploadSuccess, onCancel, theme }: Upl
         payloadFiles = [{ fileName: trimmedName, code: pasteCode }];
       }
 
-      const res = await fetch('/api/components', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: effectiveCategory,
-          files: payloadFiles,
-        }),
+      const data = await vaultClient.uploadComponents({
+        category: effectiveCategory,
+        files: payloadFiles,
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Errore durante il salvataggio');
-      }
 
       await onUploadSuccess(data.savedIds ?? []);
     } catch (err) {
@@ -139,7 +131,7 @@ export function UploadView({ categories, onUploadSuccess, onCancel, theme }: Upl
             <p className={`mt-2 text-[17px] ${theme.inkSecondary}`}>
               Destinazione:{' '}
               <code className={`font-mono text-base font-bold ${theme.highlightText}`}>
-                src/vault/{effectiveCategory.toLowerCase().replace(/\s+/g, '-')}/
+                vault/{effectiveCategory.toLowerCase().replace(/\s+/g, '-')}/
               </code>
             </p>
           </div>
@@ -262,7 +254,7 @@ export function UploadView({ categories, onUploadSuccess, onCancel, theme }: Upl
                           {file.fileName}
                         </p>
                         <p className={`text-[15px] ${theme.inkSecondary} tabular-nums`}>
-                          {(file.sizeBytes / 1024).toFixed(1)} KB · src/vault/
+                          {(file.sizeBytes / 1024).toFixed(1)} KB · vault/
                           {effectiveCategory.toLowerCase().replace(/\s+/g, '-')}/
                         </p>
                       </div>

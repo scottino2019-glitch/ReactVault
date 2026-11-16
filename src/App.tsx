@@ -31,6 +31,7 @@ import { UploadView } from './components/UploadView';
 import { VaultExplorer } from './components/VaultExplorer';
 import { NewComponentModal } from './components/NewComponentModal';
 import { APP_THEMES, type AppThemeId } from './theme';
+import * as vaultClient from './lib/vaultClient';
 
 type ActiveSection = 'library' | 'upload' | 'explorer';
 type SplitMode = 'split' | 'preview' | 'code';
@@ -55,7 +56,7 @@ export default function App() {
   }, [themeId]);
 
   const [vault, setVault] = useState<VaultStateResponse>({
-    vaultPath: 'src/vault',
+    vaultPath: 'vault',
     categories: [],
     components: [],
   });
@@ -94,9 +95,7 @@ export default function App() {
 
   const fetchVault = useCallback(async (preferredId?: string) => {
     try {
-      const res = await fetch('/api/vault');
-      if (!res.ok) throw new Error('Impossibile leggere la cartella interna');
-      const data: VaultStateResponse = await res.json();
+      const data = await vaultClient.loadVault();
       setVault(data);
 
       setSelectedId((prevId) => {
@@ -187,18 +186,7 @@ export default function App() {
     setSavingCode(true);
     setBannerError(null);
     try {
-      const res = await fetch(
-        `/api/components/${encodeURIComponent(activeComponent.category)}/${encodeURIComponent(
-          activeComponent.fileName
-        )}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: draftCode }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
+      const data = await vaultClient.updateComponent(activeComponent, { code: draftCode });
       setSavedCode(draftCode);
       setVault(data.vault);
     } catch (err) {
@@ -223,98 +211,72 @@ export default function App() {
 
   const handleCreateCategory = async (name: string) => {
     setBannerError(null);
-    const res = await fetch('/api/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setBannerError(data.error || 'Errore creazione categoria');
-      return;
+    try {
+      const data = await vaultClient.createCategory(name);
+      setVault(data.vault);
+      setSelectedCategory(data.name);
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Errore creazione categoria');
     }
-    setVault(data.vault);
-    setSelectedCategory(data.name);
   };
 
   const handleRenameCategory = async (oldName: string, newName: string) => {
     setBannerError(null);
-    const res = await fetch(`/api/categories/${encodeURIComponent(oldName)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newName }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setBannerError(data.error || 'Errore rinomina categoria');
-      return;
-    }
-    setVault(data.vault);
-    if (selectedCategory === oldName) {
-      setSelectedCategory(data.name);
-    }
-    if (activeComponent?.category === oldName) {
-      setSelectedId(`${data.name}/${activeComponent.fileName}`);
+    try {
+      const data = await vaultClient.renameCategory(oldName, newName);
+      setVault(data.vault);
+      if (selectedCategory === oldName) {
+        setSelectedCategory(data.name);
+      }
+      if (activeComponent?.category === oldName) {
+        setSelectedId(`${data.name}/${activeComponent.fileName}`);
+      }
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Errore rinomina categoria');
     }
   };
 
   const handleDeleteCategory = async (name: string, force: boolean) => {
     setBannerError(null);
-    const res = await fetch(
-      `/api/categories/${encodeURIComponent(name)}?force=${force ? 'true' : 'false'}`,
-      { method: 'DELETE' }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      setBannerError(data.error || 'Errore eliminazione categoria');
-      return;
-    }
-    setVault(data.vault);
-    if (selectedCategory === name) {
-      setSelectedCategory('__all__');
-    }
-    if (activeComponent?.category === name) {
-      setSelectedId(data.vault.components[0]?.id ?? null);
+    try {
+      const data = await vaultClient.deleteCategory(name, force);
+      setVault(data.vault);
+      if (selectedCategory === name) {
+        setSelectedCategory('__all__');
+      }
+      if (activeComponent?.category === name) {
+        setSelectedId(data.vault.components[0]?.id ?? null);
+      }
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Errore eliminazione categoria');
     }
   };
 
   const handleMoveComponent = async (comp: VaultComponent, newCategory: string) => {
     if (comp.category === newCategory) return;
     setBannerError(null);
-    const res = await fetch(
-      `/api/components/${encodeURIComponent(comp.category)}/${encodeURIComponent(comp.fileName)}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newCategory }),
+    try {
+      const data = await vaultClient.updateComponent(comp, { newCategory });
+      setVault(data.vault);
+      if (selectedId === comp.id) {
+        setSelectedId(data.id);
       }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      setBannerError(data.error || 'Errore spostamento componente');
-      return;
-    }
-    setVault(data.vault);
-    if (selectedId === comp.id) {
-      setSelectedId(data.id);
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Errore spostamento componente');
     }
   };
 
   const handleDeleteComponent = async (comp: VaultComponent) => {
     setBannerError(null);
-    const res = await fetch(
-      `/api/components/${encodeURIComponent(comp.category)}/${encodeURIComponent(comp.fileName)}`,
-      { method: 'DELETE' }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      setBannerError(data.error || 'Errore eliminazione componente');
-      return;
-    }
-    setVault(data.vault);
-    setConfirmDeleteId(null);
-    if (selectedId === comp.id) {
-      setSelectedId(data.vault.components[0]?.id ?? null);
+    try {
+      const data = await vaultClient.deleteComponent(comp);
+      setVault(data.vault);
+      setConfirmDeleteId(null);
+      if (selectedId === comp.id) {
+        setSelectedId(data.vault.components[0]?.id ?? null);
+      }
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Errore eliminazione componente');
     }
   };
 
@@ -339,20 +301,18 @@ export default function App() {
     const targetCategory =
       selectedCategory !== '__all__' ? selectedCategory : vault.categories[0]?.name || 'generale';
 
-    const res = await fetch('/api/components', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category: targetCategory, files: payload }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setBannerError(data.error || 'Errore caricamento rapido');
-      return;
-    }
-    setVault(data.vault);
-    if (data.savedIds?.[0]) {
-      setSelectedId(data.savedIds[0]);
-      setSection('library');
+    try {
+      const data = await vaultClient.uploadComponents({
+        category: targetCategory,
+        files: payload,
+      });
+      setVault(data.vault);
+      if (data.savedIds?.[0]) {
+        setSelectedId(data.savedIds[0]);
+        setSection('library');
+      }
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Errore caricamento rapido');
     }
   };
 
@@ -739,7 +699,7 @@ export default function App() {
                     Trascina qui i tuoi file{' '}
                     <code className={`font-mono font-bold ${theme.highlightText}`}>.tsx</code> o{' '}
                     <code className={`font-mono font-bold ${theme.highlightText}`}>.jsx</code> per
-                    salvarli in <code className="font-mono font-bold">src/vault/</code> e
+                    salvarli in <code className="font-mono font-bold">vault/</code> e
                     visualizzarli subito in anteprima.
                   </p>
                   <div className="mt-7 flex flex-wrap items-center justify-center gap-3.5">

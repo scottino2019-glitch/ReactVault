@@ -130,7 +130,7 @@ export function VaultExplorer({
               className={`rounded-lg border-2 ${theme.borderStrong} ${theme.cardAltBg} p-5 text-base ${theme.inkPrimary}`}
             >
               Nessuna cartella categoria presente in{' '}
-              <code className="font-mono font-bold">src/vault/</code>.
+              <code className="font-mono font-bold">vault/</code>.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">

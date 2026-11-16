@@ -2,48 +2,22 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
-import { transform } from 'esbuild';
-import { compile as compileTailwind } from 'tailwindcss';
 import { createServer as createViteServer } from 'vite';
+import { compileComponentCode } from './lib/compiler.ts';
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = process.cwd();
-const VAULT_DIR = path.resolve(ROOT_DIR, 'src', 'vault');
+const VAULT_DIR = path.resolve(ROOT_DIR, 'vault');
 const ALLOWED_EXTENSIONS = new Set(['.tsx', '.jsx', '.ts', '.js']);
 
 fs.mkdirSync(VAULT_DIR, { recursive: true });
 
-let tailwindCompilerPromise: ReturnType<typeof compileTailwind> | null = null;
-
-function getTailwindCompiler() {
-  if (!tailwindCompilerPromise) {
-    tailwindCompilerPromise = compileTailwind(
-      `@import "tailwindcss";\n@custom-variant dark (&:where(.dark, .dark *));`,
-      {
-        loadStylesheet: async (id: string) => {
-          if (id === 'tailwindcss') {
-            const twIndex = path.resolve(ROOT_DIR, 'node_modules', 'tailwindcss', 'index.css');
-            return {
-              path: twIndex,
-              base: path.dirname(twIndex),
-              content: fs.readFileSync(twIndex, 'utf8'),
-            };
-          }
-          throw new Error(`Stylesheet non supportato: ${id}`);
-        },
-      }
-    );
-  }
-  return tailwindCompilerPromise;
-}
-
 function sanitizeCategoryName(raw: string): string {
-  const cleaned = raw
+  return raw
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9_-]/g, '');
-  return cleaned;
 }
 
 function sanitizeFileName(raw: string): string {
@@ -105,7 +79,7 @@ function scanVault() {
           name: baseName,
           fileName: file.name,
           category: catName,
-          relativePath: `src/vault/${catName}/${file.name}`,
+          relativePath: `vault/${catName}/${file.name}`,
           code,
           updatedAt: stat.mtime.toISOString(),
           sizeBytes: stat.size,
@@ -120,61 +94,11 @@ function scanVault() {
   components.sort((a, b) => a.name.localeCompare(b.name, 'it'));
 
   return {
-    vaultPath: 'src/vault',
+    writable: true,
+    vaultPath: 'vault',
     categories,
     components,
   };
-}
-
-function extractCandidates(code: string): string[] {
-  const matches = code.match(/[a-zA-Z0-9_:/\[\].#()%!-]+/g);
-  if (!matches) return [];
-  return Array.from(new Set(matches));
-}
-
-function extractDetectedProps(code: string) {
-  const detected: Array<{
-    name: string;
-    type: 'string' | 'number' | 'boolean';
-    defaultValue: string | number | boolean;
-  }> = [];
-  const seen = new Set<string>();
-
-  const defaultAssignRegex = /([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(?:'([^'\n]*)'|"([^"\n]*)"|(true|false)|(-?\d+(?:\.\d+)?))\s*(?:,|\n|\})/g;
-  const paramBlockMatch = code.match(/(?:function\s+[A-Z][A-Za-z0-9_]*|const\s+[A-Z][A-Za-z0-9_]*\s*=\s*)\(\s*\{([\s\S]*?)\}/);
-
-  if (paramBlockMatch?.[1]) {
-    let match: RegExpExecArray | null;
-    while ((match = defaultAssignRegex.exec(paramBlockMatch[1])) !== null) {
-      const propName = match[1];
-      if (!propName || seen.has(propName) || propName === 'children' || propName === 'className') {
-        continue;
-      }
-      seen.add(propName);
-
-      if (match[2] !== undefined || match[3] !== undefined) {
-        detected.push({
-          name: propName,
-          type: 'string',
-          defaultValue: match[2] ?? match[3] ?? '',
-        });
-      } else if (match[4] !== undefined) {
-        detected.push({
-          name: propName,
-          type: 'boolean',
-          defaultValue: match[4] === 'true',
-        });
-      } else if (match[5] !== undefined) {
-        detected.push({
-          name: propName,
-          type: 'number',
-          defaultValue: Number(match[5]),
-        });
-      }
-    }
-  }
-
-  return detected;
 }
 
 async function startServer() {
@@ -254,7 +178,9 @@ async function startServer() {
       const force = req.query.force === 'true';
       const children = fs.readdirSync(catPath).filter((n) => !n.startsWith('.'));
       if (children.length > 0 && !force) {
-        res.status(409).json({ error: 'La categoria contiene file. Conferma eliminazione forzata.' });
+        res
+          .status(409)
+          .json({ error: 'La categoria contiene file. Conferma eliminazione forzata.' });
         return;
       }
       fs.rmSync(catPath, { recursive: true, force: true });
@@ -267,7 +193,8 @@ async function startServer() {
 
   app.post('/api/components', (req: Request, res: Response) => {
     try {
-      const category = sanitizeCategoryName(String(req.body?.category ?? 'generale')) || 'generale';
+      const category =
+        sanitizeCategoryName(String(req.body?.category ?? 'generale')) || 'generale';
       const catPath = resolveSafePath(category);
       fs.mkdirSync(catPath, { recursive: true });
 
@@ -328,7 +255,9 @@ async function startServer() {
       const newPath = resolveSafePath(nextCategory, nextFileName);
 
       if (newPath !== oldPath && fs.existsSync(newPath)) {
-        res.status(409).json({ error: `Esiste già "${nextFileName}" in "${nextCategory}"` });
+        res
+          .status(409)
+          .json({ error: `Esiste già "${nextFileName}" in "${nextCategory}"` });
         return;
       }
 
@@ -368,50 +297,10 @@ async function startServer() {
   });
 
   app.post('/api/compile', async (req: Request, res: Response) => {
-    const started = performance.now();
     const code = String(req.body?.code ?? '');
     const fileName = String(req.body?.fileName ?? 'Component.tsx');
-    const ext = path.extname(fileName).toLowerCase();
-    const loader = ext === '.jsx' ? 'jsx' : ext === '.js' ? 'js' : ext === '.ts' ? 'ts' : 'tsx';
-
-    try {
-      const result = await transform(code, {
-        loader,
-        format: 'cjs',
-        jsx: 'automatic',
-        target: 'es2022',
-        sourcefile: fileName,
-      });
-
-      const compiler = await getTailwindCompiler();
-      const candidates = extractCandidates(code);
-      const css = compiler.build(candidates);
-      const detectedProps = extractDetectedProps(code);
-
-      res.json({
-        compiledCode: result.code,
-        css,
-        detectedProps,
-        compileTimeMs: Math.round(performance.now() - started),
-      });
-    } catch (err: unknown) {
-      const e = err as {
-        message?: string;
-        errors?: Array<{
-          text?: string;
-          location?: { line?: number; column?: number; lineText?: string };
-        }>;
-      };
-      const firstErr = e?.errors?.[0];
-      res.json({
-        error: {
-          message: firstErr?.text || e?.message || 'Errore di compilazione TSX/JSX',
-          line: firstErr?.location?.line,
-          column: firstErr?.location?.column,
-          lineText: firstErr?.location?.lineText,
-        },
-      });
-    }
+    const output = await compileComponentCode(code, fileName);
+    res.json(output);
   });
 
   if (process.env.NODE_ENV !== 'production') {

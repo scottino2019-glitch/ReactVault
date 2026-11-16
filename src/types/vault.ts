@@ -21,6 +21,7 @@ export interface VaultComponent {
 }
 
 export interface VaultStateResponse {
+  writable?: boolean;
   vaultPath: string;
   categories: VaultCategory[];
   components: VaultComponent[];

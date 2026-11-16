@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import type { VaultCategory } from '../types/vault';
 import type { AppTheme } from '../theme';
+import * as vaultClient from '../lib/vaultClient';
 
 interface NewComponentModalProps {
   open: boolean;
@@ -77,19 +78,10 @@ export function NewComponentModal({
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/components', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category: targetCategory,
-          fileName,
-          code: buildNeutralTemplate(baseName),
-        }),
+      const data = await vaultClient.uploadComponents({
+        category: targetCategory,
+        files: [{ fileName, code: buildNeutralTemplate(baseName) }],
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Errore creazione componente');
-      }
       const savedId = data.savedIds?.[0];
       setName('');
       setCustomCategory('');
