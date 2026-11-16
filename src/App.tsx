@@ -32,6 +32,7 @@ import { VaultExplorer } from './components/VaultExplorer';
 import { NewComponentModal } from './components/NewComponentModal';
 import { APP_THEMES, type AppThemeId } from './theme';
 import * as vaultClient from './lib/vaultClient';
+import { compileInBrowser } from './lib/browserCompiler';
 
 type ActiveSection = 'library' | 'upload' | 'explorer';
 type SplitMode = 'split' | 'preview' | 'code';
@@ -148,20 +149,39 @@ export default function App() {
 
     setCompiling(true);
     try {
-      const res = await fetch('/api/compile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, fileName }),
-        signal: controller.signal,
-      });
-      const data: CompileResult = await res.json();
+      const diskAvailable = await vaultClient.isDiskBackendAvailable();
+      if (diskAvailable) {
+        try {
+          const res = await fetch('/api/compile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, fileName }),
+            signal: controller.signal,
+          });
+          const contentType = res.headers.get('content-type') || '';
+          if (res.ok && contentType.includes('application/json')) {
+            const data: CompileResult = await res.json();
+            if (!controller.signal.aborted) {
+              setCompileResult(data);
+            }
+            return;
+          }
+        } catch (err) {
+          if ((err as { name?: string })?.name === 'AbortError') return;
+          // Fallback seamlessly to in-browser compiler below
+        }
+      }
+
+      const browserData = await compileInBrowser(code, fileName);
       if (!controller.signal.aborted) {
-        setCompileResult(data);
+        setCompileResult(browserData);
       }
     } catch (err) {
       if ((err as { name?: string })?.name !== 'AbortError') {
         setCompileResult({
-          error: { message: 'Errore di comunicazione con il compilatore locale' },
+          error: {
+            message: err instanceof Error ? err.message : 'Errore compilazione componente',
+          },
         });
       }
     } finally {
