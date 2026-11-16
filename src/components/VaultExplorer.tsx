@@ -15,9 +15,11 @@ import type { AppTheme } from '../theme';
 
 interface VaultExplorerProps {
   vaultPath: string;
+  writable?: boolean;
   categories: VaultCategory[];
   components: VaultComponent[];
   onRefresh: () => Promise<void>;
+  onSyncSeed?: () => void;
   onOpenComponent: (componentId: string) => void;
   onDeleteComponent: (comp: VaultComponent) => Promise<void>;
   onMoveComponent: (comp: VaultComponent, newCategory: string) => Promise<void>;
@@ -29,9 +31,11 @@ interface VaultExplorerProps {
 
 export function VaultExplorer({
   vaultPath,
+  writable,
   categories,
   components,
   onRefresh,
+  onSyncSeed,
   onOpenComponent,
   onDeleteComponent,
   onMoveComponent,
@@ -75,29 +79,57 @@ export function VaultExplorer({
     <div className={`flex-1 min-h-0 overflow-y-auto p-6 lg:p-10 ${theme.canvasBg}`}>
       <div className="max-w-5xl mx-auto space-y-6">
         <div
-          className={`rounded-xl border-2 ${theme.borderStrong} ${theme.cardBg} p-6 shadow-md flex flex-wrap items-center justify-between gap-4`}
+          className={`rounded-xl border-2 ${theme.borderStrong} ${theme.cardBg} p-6 shadow-md space-y-4`}
         >
-          <div>
-            <h1 className={`text-[26px] font-bold tracking-tight ${theme.inkPrimary}`}>
-              Cartella interna dell&apos;app
-            </h1>
-            <p className={`mt-1.5 text-[17px] ${theme.inkSecondary}`}>
-              Percorso locale:{' '}
-              <code className={`font-mono text-base font-bold ${theme.highlightText}`}>
-                {vaultPath}/
-              </code>{' '}
-              · <span className="tabular-nums font-bold">{categories.length}</span> categorie ·{' '}
-              <span className="tabular-nums font-bold">{components.length}</span> componenti
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className={`text-[26px] font-bold tracking-tight ${theme.inkPrimary}`}>
+                Cartella interna dell&apos;app
+              </h1>
+              <p className={`mt-1.5 text-[17px] ${theme.inkSecondary}`}>
+                Percorso locale:{' '}
+                <code className={`font-mono text-base font-bold ${theme.highlightText}`}>
+                  {vaultPath}/
+                </code>{' '}
+                · <span className="tabular-nums font-bold">{categories.length}</span> categorie ·{' '}
+                <span className="tabular-nums font-bold">{components.length}</span> componenti
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {writable === false && onSyncSeed && (
+                <button
+                  type="button"
+                  onClick={onSyncSeed}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold rounded-lg border-2 ${theme.activeBorder} ${theme.cardAltBg} ${theme.inkPrimary} ${theme.cardHoverBg} cursor-pointer whitespace-nowrap shrink-0`}
+                >
+                  Importa da vault/
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold rounded-lg border-2 ${theme.borderStrong} ${theme.cardAltBg} ${theme.inkPrimary} ${theme.cardHoverBg} cursor-pointer whitespace-nowrap shrink-0`}
+              >
+                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+                Scansiona cartella
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 text-base font-bold rounded-lg border-2 ${theme.borderStrong} ${theme.cardAltBg} ${theme.inkPrimary} ${theme.cardHoverBg} cursor-pointer whitespace-nowrap shrink-0`}
-          >
-            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-            Scansiona cartella
-          </button>
+
+          {writable === false && (
+            <div
+              className={`rounded-lg border-2 ${theme.borderSubtle} ${theme.inputBg} px-4 py-3 text-base ${theme.inkSecondary}`}
+            >
+              Su Vercel il filesystem del server è in sola lettura: puoi aggiungere i file{' '}
+              <code className={`font-mono font-bold ${theme.highlightText}`}>.tsx/.jsx</code>{' '}
+              direttamente nella cartella{' '}
+              <code className={`font-mono font-bold ${theme.highlightText}`}>
+                vault/&lt;categoria&gt;/
+              </code>{' '}
+              del progetto prima del deploy per averli già inclusi automaticamente, mentre i file
+              caricati qui dal browser vengono salvati nella memoria locale del browser.
+            </div>
+          )}
         </div>
 
         <section

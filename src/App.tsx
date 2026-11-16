@@ -497,10 +497,15 @@ export default function App() {
       ) : section === 'explorer' ? (
         <VaultExplorer
           vaultPath={vault.vaultPath}
+          writable={vault.writable}
           categories={vault.categories}
           components={vault.components}
           theme={theme}
           onRefresh={() => fetchVault()}
+          onSyncSeed={() => {
+            const next = vaultClient.syncFromRepoSeed();
+            setVault(next);
+          }}
           onOpenComponent={(id) => {
             setSelectedId(id);
             setSection('library');

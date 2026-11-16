@@ -2,6 +2,7 @@ import vaultSeed from 'virtual:vault-seed';
 import type { VaultComponent, VaultStateResponse } from '../types/vault';
 
 const BROWSER_VAULT_KEY = 'reactvault_browser_vault_v1';
+const KNOWN_SEED_IDS_KEY = 'reactvault_known_seed_ids_v1';
 const ALLOWED_EXTENSIONS = ['.tsx', '.jsx', '.ts', '.js'];
 
 let diskModeCache: boolean | null = null;
@@ -53,15 +54,60 @@ function recomputeVault(categoryNames: string[], components: VaultComponent[]): 
   };
 }
 
+function getKnownSeedIds(): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(KNOWN_SEED_IDS_KEY);
+    if (raw) {
+      return new Set(JSON.parse(raw) as string[]);
+    }
+  } catch {
+    // ignore
+  }
+  return new Set();
+}
+
+function saveKnownSeedIds(ids: string[]) {
+  try {
+    window.localStorage.setItem(KNOWN_SEED_IDS_KEY, JSON.stringify(ids));
+  } catch {
+    // ignore
+  }
+}
+
 function readBrowserVault(): VaultStateResponse {
   try {
     const raw = window.localStorage.getItem(BROWSER_VAULT_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as VaultStateResponse;
-      return recomputeVault(
-        (parsed.categories ?? []).map((c) => c.name),
-        parsed.components ?? []
-      );
+      const knownIds = getKnownSeedIds();
+      const existingMap = new Map((parsed.components ?? []).map((c) => [c.id, c]));
+      const catNames = new Set((parsed.categories ?? []).map((c) => c.name));
+      let changed = false;
+
+      for (const cat of vaultSeed.categories) {
+        if (!knownIds.has(`cat:${cat.name}`)) {
+          catNames.add(cat.name);
+          changed = true;
+        }
+      }
+
+      for (const seedComp of vaultSeed.components) {
+        if (!knownIds.has(`comp:${seedComp.id}`) && !existingMap.has(seedComp.id)) {
+          existingMap.set(seedComp.id, seedComp);
+          catNames.add(seedComp.category);
+          changed = true;
+        }
+      }
+
+      const merged = recomputeVault(Array.from(catNames), Array.from(existingMap.values()));
+      if (changed) {
+        writeBrowserVault(merged);
+        saveKnownSeedIds([
+          ...vaultSeed.categories.map((c) => `cat:${c.name}`),
+          ...vaultSeed.components.map((c) => `comp:${c.id}`),
+        ]);
+      }
+      return merged;
     }
   } catch {
     // fallback to seed
@@ -72,7 +118,30 @@ function readBrowserVault(): VaultStateResponse {
     vaultSeed.components
   );
   writeBrowserVault(initial);
+  saveKnownSeedIds([
+    ...vaultSeed.categories.map((c) => `cat:${c.name}`),
+    ...vaultSeed.components.map((c) => `comp:${c.id}`),
+  ]);
   return initial;
+}
+
+export function syncFromRepoSeed(): VaultStateResponse {
+  const current = readBrowserVault();
+  const byId = new Map(current.components.map((c) => [c.id, c]));
+  for (const seedComp of vaultSeed.components) {
+    byId.set(seedComp.id, seedComp);
+  }
+  const catNames = new Set([
+    ...current.categories.map((c) => c.name),
+    ...vaultSeed.categories.map((c) => c.name),
+  ]);
+  const next = recomputeVault(Array.from(catNames), Array.from(byId.values()));
+  writeBrowserVault(next);
+  saveKnownSeedIds([
+    ...vaultSeed.categories.map((c) => `cat:${c.name}`),
+    ...vaultSeed.components.map((c) => `comp:${c.id}`),
+  ]);
+  return next;
 }
 
 function writeBrowserVault(state: VaultStateResponse) {
