@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const RIGHE = [
-  { id: 'a1', num: '01', title: 'Pietra e taglio di luce', text: 'La geometria netta divide il campo visivo e guida la lettura senza cornici pesanti.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-day.jpg' },
-  { id: 'a2', num: '02', title: 'Erbario su carta vergata', text: 'Ogni tavola conserva spazio vuoto attorno al soggetto per alleggerire la pagina.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/botanical.jpg' },
-  { id: 'a3', num: '03', title: 'Volumi e chiaroscuro', text: 'Ombre morbide e proporzioni equilibrate trasformano un elenco in racconto visivo.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/sculptural.jpg' },
+  { id: 'a1', num: '01', title: 'Pietra e taglio di luce', text: 'La geometria netta divide il campo visivo e guida la lettura senza cornici pesanti.', image: './images/courtyard-day.jpg' },
+  { id: 'a2', num: '02', title: 'Erbario su carta vergata', text: 'Ogni tavola conserva spazio vuoto attorno al soggetto per alleggerire la pagina.', image: './images/botanical.jpg' },
+  { id: 'a3', num: '03', title: 'Volumi e chiaroscuro', text: 'Ombre morbide e proporzioni equilibrate trasformano un elenco in racconto visivo.', image: './images/sculptural.jpg' },
 ];
 
 export default function FisarmonicaElastica() {
