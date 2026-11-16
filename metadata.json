@@ -1,0 +1,6 @@
+{
+  "name": "ReactVault",
+  "description": "Raccoglitore di componenti React organizzati per categorie su cartella interna con anteprima interattiva in tempo reale.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
