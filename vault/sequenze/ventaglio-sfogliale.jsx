@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const TAVOLE = [
-  { id: 'f1', title: 'Cortile solare', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-day.jpg' },
-  { id: 'f2', title: 'Tavola botanica', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/botanical.jpg' },
-  { id: 'f3', title: 'Volumi in gesso', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/sculptural.jpg' },
-  { id: 'f4', title: 'Riflessi serali', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-dusk.jpg' },
+  { id: 'f1', title: 'Cortile solare', image: './images/courtyard-day.jpg' },
+  { id: 'f2', title: 'Tavola botanica', image: './images/botanical.jpg' },
+  { id: 'f3', title: 'Volumi in gesso', image: './images/sculptural.jpg' },
+  { id: 'f4', title: 'Riflessi serali', image: './images/courtyard-dusk.jpg' },
 ];
 
 export default function VentaglioSfogliale() {
