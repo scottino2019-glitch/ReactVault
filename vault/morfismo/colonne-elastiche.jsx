@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PANNELLI = [
-  { id: 'p1', label: '01', title: 'Cortile', desc: 'Spazio aperto delimitato da mura in pietra chiara.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-day.jpg' },
-  { id: 'p2', label: '02', title: 'Erbario', desc: 'Foglie pressate e catalogate su fogli di cotone.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/botanical.jpg' },
-  { id: 'p3', label: '03', title: 'Atelier', desc: 'Forme plastiche in gesso sotto luce obliqua.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/sculptural.jpg' },
+  { id: 'p1', label: '01', title: 'Cortile', desc: 'Spazio aperto delimitato da mura in pietra chiara.', image: './images/courtyard-day.jpg' },
+  { id: 'p2', label: '02', title: 'Erbario', desc: 'Foglie pressate e catalogate su fogli di cotone.', image: './images/botanical.jpg' },
+  { id: 'p3', label: '03', title: 'Atelier', desc: 'Forme plastiche in gesso sotto luce obliqua.', image: './images/sculptural.jpg' },
 ];
 
 export default function ColonneElastiche() {
