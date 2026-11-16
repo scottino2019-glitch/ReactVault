@@ -48,7 +48,7 @@ export default function RiflettoreMaschera() {
         </div>
 
         <motion.div style={{ clipPath }} className="absolute inset-0 pointer-events-none">
-          <img src="https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-day.jpg" alt="Corte illuminata" className="w-full h-full object-cover" />
+          <img src="./images/courtyard-day.jpg" alt="Corte illuminata" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[#FAF8F4]/25" />
           <div className="absolute inset-0 p-8 md:p-10 flex flex-col justify-between text-[#1A1917]">
             <p className="text-xs uppercase tracking-[0.2em] font-medium text-[#1E3A8A]">Strato rivelato · Luce piena</p>
