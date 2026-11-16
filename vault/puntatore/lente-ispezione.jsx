@@ -33,7 +33,7 @@ export default function LenteIspezione() {
           transition={{ type: 'spring', stiffness: 180, damping: 24 }}
           className="w-full h-full"
         >
-          <img src="https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-day.jpg" alt="Corte esplorabile" className="w-full h-full object-cover" />
+          <img src="./images/courtyard-day.jpg" alt="Corte esplorabile" className="w-full h-full object-cover" />
         </motion.div>
       </div>
     </div>
