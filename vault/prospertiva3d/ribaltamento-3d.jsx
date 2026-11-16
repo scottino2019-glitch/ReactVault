@@ -27,7 +27,7 @@ export default function Ribaltamento3D() {
         >
           <div style={{ backfaceVisibility: 'hidden' }} className="absolute inset-0 rounded-xl overflow-hidden border border-[#E2DCD2] bg-[#FAF8F4] grid grid-cols-12">
             <div className="col-span-6 h-full overflow-hidden">
-              <img src="https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/sculptural.jpg" alt="Forme scultoree" className="w-full h-full object-cover" />
+              <img src="./images/sculptural.jpg" alt="Forme scultoree" className="w-full h-full object-cover" />
             </div>
             <div className="col-span-6 p-6 flex flex-col justify-between">
               <span className="text-xs uppercase tracking-[0.16em] text-[#1E3A8A]">Fronte · Tavola</span>
