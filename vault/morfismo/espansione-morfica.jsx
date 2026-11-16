@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 const SCHEDE = [
-  { id: 'm-1', num: 'I', title: 'Corte di pietra', subtitle: 'Luce e travertino', desc: 'Superfici piane e tagli netti d’ombra che ordinano lo spazio senza decorazioni aggiunte.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-day.jpg' },
-  { id: 'm-2', num: 'II', title: 'Erbario su carta', subtitle: 'Trama botanica', desc: 'Esemplari essiccati disposti su fibra grezza per mettere in risalto contorno e nervatura.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/botanical.jpg' },
-  { id: 'm-3', num: 'III', title: 'Forme in gesso', subtitle: 'Equilibrio statico', desc: 'Volumi morbidi e cilindri scolpiti accostati su legno chiaro a luce naturale.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/sculptural.jpg' },
-  { id: 'm-4', num: 'IV', title: 'Ora blu', subtitle: 'Luce indiretta', desc: 'Il medesimo cortile al crepuscolo, dove il riflesso sull’acqua ribalta i contrasti.', image: 'https://ais-dev-ruz3axlaiqatpc2uvxvtuf-638126288051.europe-west1.run.app/images/courtyard-dusk.jpg' },
+  { id: 'm-1', num: 'I', title: 'Corte di pietra', subtitle: 'Luce e travertino', desc: 'Superfici piane e tagli netti d’ombra che ordinano lo spazio senza decorazioni aggiunte.', image: './images/courtyard-day.jpg' },
+  { id: 'm-2', num: 'II', title: 'Erbario su carta', subtitle: 'Trama botanica', desc: 'Esemplari essiccati disposti su fibra grezza per mettere in risalto contorno e nervatura.', image: './images/botanical.jpg' },
+  { id: 'm-3', num: 'III', title: 'Forme in gesso', subtitle: 'Equilibrio statico', desc: 'Volumi morbidi e cilindri scolpiti accostati su legno chiaro a luce naturale.', image: './images/sculptural.jpg' },
+  { id: 'm-4', num: 'IV', title: 'Ora blu', subtitle: 'Luce indiretta', desc: 'Il medesimo cortile al crepuscolo, dove il riflesso sull’acqua ribalta i contrasti.', image: './images/courtyard-dusk.jpg' },
 ];
 
 export default function EspansioneMorfica() {
